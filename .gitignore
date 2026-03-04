@@ -22,3 +22,12 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+/vendor
+/node_modules
+.env
+.env.backup
+/storage/*.key
+/public/hot
+/public/storage
+/bootstrap/cache
+*.log

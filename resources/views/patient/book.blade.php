@@ -147,30 +147,35 @@
 
   function loadDoctors(clinicId) {
     document.getElementById('doctorsList').innerHTML = '<p style="color:#64748b">Loading...</p>';
-    fetch('/book/doctors?clinic_id=' + clinicId, {
-      headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(r => r.json())
-    .then(doctors => {
-      if (doctors.length === 0) {
+    fetch('/book/doctors?clinic_id=' + clinicId)
+    .then(function(r) { return r.text(); })
+    .then(function(text) {
+      // Strip any leading < or whitespace that Laravel might add
+      var clean = text.trim();
+      var start = clean.indexOf('[');
+      if (start > 0) clean = clean.substring(start);
+      var doctors = JSON.parse(clean);
+      if (!doctors || doctors.length === 0) {
         document.getElementById('doctorsList').innerHTML =
           '<p style="color:#64748b;text-align:center;padding:20px">No doctors at this clinic.</p>';
         return;
       }
-      document.getElementById('doctorsList').innerHTML = doctors.map(d => `
-        <button type="button" onclick="selectDoctor(${d.id}, '${d.user.name}')"
-          style="width:100%;background:#0f172a;border:1.5px solid #334155;border-radius:10px;
-                 padding:14px 18px;text-align:left;cursor:pointer;margin-bottom:10px;"
-          onmouseover="this.style.borderColor='#2563eb'"
-          onmouseout="this.style.borderColor='#334155'">
-          <p style="color:#f1f5f9;font-weight:700;font-size:15px;margin:0">${d.user.name}</p>
-          <p style="color:#64748b;font-size:13px;margin:4px 0 0">${d.specialty}</p>
-        </button>
-      `).join('');
+      var html = '';
+      doctors.forEach(function(d) {
+        html += '<button type="button" onclick="selectDoctor(' + d.id + ', \'' + d.user.name + '\')"' +
+          ' style="width:100%;background:#0f172a;border:1.5px solid #334155;border-radius:10px;' +
+          'padding:14px 18px;text-align:left;cursor:pointer;margin-bottom:10px;"' +
+          ' onmouseover="this.style.borderColor=\'#2563eb\'"' +
+          ' onmouseout="this.style.borderColor=\'#334155\'">' +
+          '<p style="color:#f1f5f9;font-weight:700;font-size:15px;margin:0">' + d.user.name + '</p>' +
+          '<p style="color:#64748b;font-size:13px;margin:4px 0 0">' + d.specialty + '</p>' +
+          '</button>';
+      });
+      document.getElementById('doctorsList').innerHTML = html;
     })
-    .catch(() => {
+    .catch(function(err) {
       document.getElementById('doctorsList').innerHTML =
-        '<p style="color:#ef4444">Failed to load doctors. Try again.</p>';
+        '<p style="color:#ef4444">Error: ' + err.message + '</p>';
     });
   }
 

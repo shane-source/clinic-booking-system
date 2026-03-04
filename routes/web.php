@@ -64,10 +64,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/book/doctors', function (Request $request) {
         $doctors = Doctor::with('user')
             ->where('clinic_id', $request->clinic_id)
-            ->where('is_available', true)
             ->get();
-        return response()->json($doctors);
+        $data = $doctors->map(function($d) {
+            return [
+                'id'        => $d->id,
+                'specialty' => $d->specialty,
+                'user'      => ['name' => $d->user->name ?? 'Doctor'],
+            ];
+        });
+        return response(json_encode($data->values()), 200)
+            ->header('Content-Type', 'application/json')
+            ->header('X-Content-Type-Options', 'nosniff');
     });
+
 
     Route::post('/book', function (Request $request) {
         $request->validate([
